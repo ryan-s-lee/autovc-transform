@@ -49,23 +49,30 @@ for subdir in sorted(subdirList):
         os.makedirs(os.path.join(targetDir, subdir))
     _, _, fileList = next(os.walk(os.path.join(dirName, subdir)))
     prng = RandomState(int(subdir[1:]))
-    for fileName in sorted(fileList):
-        # Read audio file
-        x, fs = sf.read(os.path.join(dirName, subdir, fileName))
-        # Remove drifting noise
-        y = signal.filtfilt(b, a, x)
-        # Ddd a little random noise for model roubstness
-        wav = y * 0.96 + (prng.rand(y.shape[0]) - 0.5) * 1e-06
-        # Compute spect
-        D = pySTFT(wav).T
-        # Convert to mel and normalize
-        D_mel = np.dot(D, mel_basis)
-        D_db = 20 * np.log10(np.maximum(min_level, D_mel)) - 16
-        S = np.clip((D_db + 100) / 100, 0, 1)
-        # save spect
-        np.save(
-            os.path.join(targetDir, subdir, fileName[:-4]),
-            S.astype(np.float32),
-            allow_pickle=False,
-        )
+    ###########  Original ##########
+    # for fileName in sorted(fileList):
+    #     # Read audio file
+    #     x, fs = sf.read(os.path.join(dirName, subdir, fileName))
+    #     # Remove drifting noise
+    #     y = signal.filtfilt(b, a, x)
+    #     # Ddd a little random noise for model roubstness
+    #     wav = y * 0.96 + (prng.rand(y.shape[0]) - 0.5) * 1e-06
+    #     # Compute spect
+    #     D = pySTFT(wav).T
+    #     # Convert to mel and normalize
+    #     D_mel = np.dot(D, mel_basis)
+    #     D_db = 20 * np.log10(np.maximum(min_level, D_mel)) - 16
+    #     S = np.clip((D_db + 100) / 100, 0, 1)
+    #     # save spect
+    #     np.save(
+    #         os.path.join(targetDir, subdir, fileName[:-4]),
+    #         S.astype(np.float32),
+    #         allow_pickle=False,
+    #     )
+
+    ########### CUSTOM ##############
+    # grab the vctk dataset
+    # 
+
+
 

@@ -3,3 +3,4 @@ autovc.ckpt
 checkpoint_step001000000_ema.pth
 __pycache__
 .ipynb_checkpoints
+vctk
