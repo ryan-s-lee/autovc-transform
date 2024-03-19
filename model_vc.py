@@ -79,8 +79,8 @@ class Encoder(nn.Module):
             codes.append(torch.cat((out_forward[:,i+self.freq-1,:],out_backward[:,i,:]), dim=-1))
 
         return codes
-      
-        
+    
+    
 class Decoder(nn.Module):
     """Decoder module:
     """
@@ -121,6 +121,13 @@ class Decoder(nn.Module):
 
         return decoder_output   
     
+    
+class CustomEncoder(nn.Module):
+    pass
+      
+        
+class CustomDecoder(nn.Module):
+    pass
     
 class Postnet(nn.Module):
     """Postnet
