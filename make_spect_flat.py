@@ -60,6 +60,11 @@ for fileName in sorted(fileList):
     prng = RandomState(int(subdir[1:]))
     # Read audio file
     x, fs = sf.read(os.path.join(dirName, fileName))
+    # if the signal is too short to filter,
+    # something's probably wrong with it, and we shouldn't
+    # train on it
+    if x.shape[-1] - 1 <= 3*max(len(a), len(b)):
+        continue
     # Remove drifting noise
     y = signal.filtfilt(b, a, x)
     # Ddd a little random noise for model roubstness
