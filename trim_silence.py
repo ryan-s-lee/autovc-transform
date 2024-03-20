@@ -39,4 +39,4 @@ for fileName in sorted(fileList):
 
     duration = len(sound)
     trimmed_sound = sound[start_trim: duration - end_trim]
-    sound.export(os.path.join(targetDir, fileName), format="wav")
+    trimmed_sound.export(os.path.join(targetDir, fileName), format="wav")

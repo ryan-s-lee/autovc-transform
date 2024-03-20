@@ -40,6 +40,8 @@ targetDir = "./spmel"
 
 dirName, _, fileList = next(os.walk(rootDir))
 
+found_speakers = set()
+
 for fileName in sorted(fileList):
     # parse out the id of the speaker (should be a string
     # like "pXXX", e.g. "p225". This is also
@@ -49,8 +51,12 @@ for fileName in sorted(fileList):
     # If the directory for this speaker has not been created,
     # create it
     if not os.path.exists(os.path.join(targetDir, subdir)):
-        print("Found speaker: ", subdir)
         os.makedirs(os.path.join(targetDir, subdir))
+
+    if subdir not in found_speakers:
+        print("Found speaker: ", subdir)
+        found_speakers.add(subdir)
+
     prng = RandomState(int(subdir[1:]))
     # Read audio file
     x, fs = sf.read(os.path.join(dirName, fileName))
