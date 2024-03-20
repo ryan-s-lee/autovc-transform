@@ -10,7 +10,9 @@ mel_spect = librosa.power_to_db(mel_spect, ref=np.max)
 librosa.display.specshow(mel_spect, y_axis="mel", fmax=8000, x_axis="time")
 plt.title("Mel Spectrogram")
 plt.colorbar(format="%+2.0f dB")
-plt.savefig("../private/spec.png")
+plt.savefig("../private/reconstruct.png")
+
+plt.clf()
 
 metadata = pickle.load(open("metadata.pkl", "rb"))
 
@@ -19,4 +21,4 @@ mel_spect = selected_entry[2]
 librosa.display.specshow(mel_spect, y_axis="mel", fmax=8000, x_axis="time")
 plt.title("Mel Spectrogram")
 plt.colorbar(format="%+2.0f dB")
-plt.savefig("../private/spec.png")
+plt.savefig("../private/original.png")
