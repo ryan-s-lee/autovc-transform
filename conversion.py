@@ -15,7 +15,7 @@ def pad_seq(x, base=32):
 device = "cuda:0"
 G = Generator(32, 256, 512, 32).eval().to(device)
 
-g_checkpoint = torch.load("autovc.ckpt")
+g_checkpoint = torch.load("autovc.ckpt", map_location=device)
 G.load_state_dict(g_checkpoint["model"])
 
 metadata = pickle.load(open("metadata.pkl", "rb"))
