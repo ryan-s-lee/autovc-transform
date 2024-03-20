@@ -34,7 +34,7 @@ b, a = butter_highpass(30, 16000, order=5)
 
 
 # audio file directory
-rootDir = "./DR-VCTK/device-recorded_trainset_wav_16k"
+rootDir = "./trimmed_wav/dr-train"
 # spectrogram directory
 targetDir = "./spmel"
 

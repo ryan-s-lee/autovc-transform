@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import librosa
 import numpy as np
 
-metadata = pickle.load(open("metadata.pkl", "rb"))
+# metadata = pickle.load(open("metadata.pkl", "rb"))
 
 # y, sr = librosa.load("./p225xp225.wav")
 #
