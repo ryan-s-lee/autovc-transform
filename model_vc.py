@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
+import math
 
 
 class LinearNorm(torch.nn.Module):
@@ -92,7 +92,93 @@ class Encoder(nn.Module):
         self.lstm.flatten_parameters()
         outputs, _ = self.lstm(x)
         out_forward = outputs[:, :, : self.dim_neck]
-        out_backward = outputs[:, :, self.dim_neck :]
+        out_backward = outputs[:, :, self.dim_neck:]
+
+        codes = []
+        for i in range(0, outputs.size(1), self.freq):
+            codes.append(
+                torch.cat(
+                    (out_forward[:, i + self.freq - 1, :], out_backward[:, i, :]),
+                    dim=-1,
+                )
+            )
+
+        return codes
+
+
+class PositionalEncoding(nn.Module):
+    """
+    Positional Encoding module, taken from
+    https://pytorch.org/tutorials/beginner/transformer_tutorial.html
+    """
+
+    def __init__(self, d_model: int, dropout: float = 0.1, max_len: int = 5000):
+        super().__init__()
+        self.dropout = nn.Dropout(p=dropout)
+
+        position = torch.arange(max_len).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, d_model, 2) * (-math.log(10000.0) / d_model))
+        pe = torch.zeros(max_len, 1, d_model)
+        pe[:, 0, 0::2] = torch.sin(position * div_term)
+        pe[:, 0, 1::2] = torch.cos(position * div_term)
+        self.register_buffer('pe', pe)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Arguments:
+            x: Tensor, shape ``[seq_len, batch_size, embedding_dim]``
+        """
+        x = x + self.pe[:x.size(0)]
+        return self.dropout(x)
+
+
+class AttEncoder(nn.Module):
+    """Custom Attention-based Content Encoder model for CSE151b"""
+
+    def __init__(self, dim_neck, dim_emb, freq):
+        super(AttEncoder, self).__init__()
+        self.dim_neck = dim_neck
+        self.freq = freq
+
+        convolutions = []
+        for i in range(3):
+            conv_layer = nn.Sequential(
+                ConvNorm(
+                    80 + dim_emb if i == 0 else 512,
+                    512,
+                    kernel_size=5,
+                    stride=1,
+                    padding=2,
+                    dilation=1,
+                    w_init_gain="relu",
+                ),
+                nn.BatchNorm1d(512),
+            )
+            convolutions.append(conv_layer)
+        self.convolutions = nn.ModuleList(convolutions)
+
+        # Apply positional encoding
+        self.pe = PositionalEncoding(512)
+
+        # TODO: Experiment with dropout and number of heads
+        self.attention = nn.MultiheadAttention(embed_dim=512, num_heads=1)
+
+        # Map to the appropriate space with an FF layer
+        self.ff = nn.Linear(512, 32)
+
+    def forward(self, x, c_org):
+        x = x.squeeze(1).transpose(2, 1)
+        c_org = c_org.unsqueeze(-1).expand(-1, -1, x.size(-1))
+        x = torch.cat((x, c_org), dim=1)
+
+        for conv in self.convolutions:
+            x = F.relu(conv(x))
+        x = x.transpose(1, 2)
+
+        # self.lstm.flatten_parameters()
+        outputs = self.attention(query=x, key=x, value=x)
+        # out_forward = outputs[:, :, :self.dim_neck]
+        # out_backward = outputs[:, :, self.dim_neck:]
 
         codes = []
         for i in range(0, outputs.size(1), self.freq):
@@ -149,18 +235,6 @@ class Decoder(nn.Module):
         decoder_output = self.linear_projection(outputs)
 
         return decoder_output
-
-
-class AttEncoder(nn.Module):
-    """Custom Attention-based Content Encoder model for CSE151b"""
-
-    def __init__(self, dim_neck, dim_emb, freq):
-        super(AttEncoder, self).__init__()
-        self.dim_neck = dim_neck
-        self.freq = freq
-
-    def forward(self, x, c_org):
-        pass
 
 
 class CustomDecoder(nn.Module):
