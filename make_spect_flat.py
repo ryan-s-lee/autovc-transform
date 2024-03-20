@@ -1,5 +1,4 @@
 import os
-import pickle
 import numpy as np
 import soundfile as sf
 from scipy import signal
@@ -35,36 +34,39 @@ b, a = butter_highpass(30, 16000, order=5)
 
 
 # audio file directory
-rootDir = "./wavs"
+rootDir = "./DR-VCTK/device-recorded_trainset_wav_16k"
 # spectrogram directory
 targetDir = "./spmel"
 
+dirName, _, fileList = next(os.walk(rootDir))
 
-dirName, subdirList, _ = next(os.walk(rootDir))
-print("Found directory: %s" % dirName)
+for fileName in sorted(fileList):
+    # parse out the id of the speaker (should be a string
+    # like "pXXX", e.g. "p225". This is also
+    # the name of the output subdirectory.
+    subdir = fileName[0:fileName.index('_')]
 
-for subdir in sorted(subdirList):
-    print(subdir)
+    # If the directory for this speaker has not been created,
+    # create it
     if not os.path.exists(os.path.join(targetDir, subdir)):
+        print("Found speaker: ", subdir)
         os.makedirs(os.path.join(targetDir, subdir))
-    _, _, fileList = next(os.walk(os.path.join(dirName, subdir)))
     prng = RandomState(int(subdir[1:]))
-    for fileName in sorted(fileList):
-        # Read audio file
-        x, fs = sf.read(os.path.join(dirName, subdir, fileName))
-        # Remove drifting noise
-        y = signal.filtfilt(b, a, x)
-        # Ddd a little random noise for model roubstness
-        wav = y * 0.96 + (prng.rand(y.shape[0]) - 0.5) * 1e-06
-        # Compute spect
-        D = pySTFT(wav).T
-        # Convert to mel and normalize
-        D_mel = np.dot(D, mel_basis)
-        D_db = 20 * np.log10(np.maximum(min_level, D_mel)) - 16
-        S = np.clip((D_db + 100) / 100, 0, 1)
-        # save spect
-        np.save(
-            os.path.join(targetDir, subdir, fileName[:-4]),
-            S.astype(np.float32),
-            allow_pickle=False,
-        )
+    # Read audio file
+    x, fs = sf.read(os.path.join(dirName, fileName))
+    # Remove drifting noise
+    y = signal.filtfilt(b, a, x)
+    # Ddd a little random noise for model roubstness
+    wav = y * 0.96 + (prng.rand(y.shape[0]) - 0.5) * 1e-06
+    # Compute spect
+    D = pySTFT(wav).T
+    # Convert to mel and normalize
+    D_mel = np.dot(D, mel_basis)
+    D_db = 20 * np.log10(np.maximum(min_level, D_mel)) - 16
+    S = np.clip((D_db + 100) / 100, 0, 1)
+    # save spect
+    np.save(
+        os.path.join(targetDir, subdir, fileName[:-4]),
+        S.astype(np.float32),
+        allow_pickle=False,
+    )
