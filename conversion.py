@@ -23,7 +23,7 @@ metadata = pickle.load(open("metadata.pkl", "rb"))
 spect_vc = []
 
 for sbmt_i in metadata:
-    x_org = sbmt_i[2]
+    x_org = sbmt_i[2].T  # TODO: May need to undo if trying out old model.
     x_org, len_pad = pad_seq(x_org)
     uttr_org = torch.from_numpy(x_org[np.newaxis, :, :]).to(device)
     emb_org = torch.from_numpy(sbmt_i[1][np.newaxis, :]).to(device)
@@ -43,4 +43,7 @@ for sbmt_i in metadata:
 
 
 with open("results.pkl", "wb") as handle:
+    pickle.dump(spect_vc, handle)
+
+with open("../private/results.pkl", "wb") as handle:
     pickle.dump(spect_vc, handle)
