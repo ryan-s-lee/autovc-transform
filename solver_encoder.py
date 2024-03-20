@@ -113,7 +113,7 @@ class Solver(object):
                 print(log)
 
             # Save the model every n iterations
-            if (i + 1 % self.save_step == 0 and i != 0):
+            if (i + 1) % self.save_step == 0:
                 print("saving model...")
                 torch.save({
                     "model": self.G.state_dict()
